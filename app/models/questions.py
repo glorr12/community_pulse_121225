@@ -36,5 +36,5 @@ class Category(db.Model):
         return self.name
 
     def __repr__(self):
-        return f'id={self.id}, name={self.name}'
+        return f"id={self.id}, name={self.name}"
 
