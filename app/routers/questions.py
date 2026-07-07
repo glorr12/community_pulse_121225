@@ -1,9 +1,9 @@
 from flask import Blueprint, request, jsonify, abort
 from pydantic import ValidationError
 
-from app.models import db, Question
+from app.models import db, Question, Category
 
-from app.schemas.questions import QuestionCreate, QuestionUpdate
+from app.schemas.questions import QuestionCreate, QuestionUpdate, CategoryRead
 from app.schemas.statistics import StatisticsRead
 
 from app.contracts import *
@@ -32,14 +32,18 @@ def questions():
 
         try:
             data = QuestionCreate.model_validate(raw)
-            question = Question(**data.model_dump())
-            db.session.add(question)
-            db.session.commit()
-
-            return jsonify(QuestionResponse.model_validate(question).model_dump()), 201
-
         except ValidationError as e:
             return jsonify(ErrorResponse(error="Data is not valid").model_dump()), 400
+
+        category = db.session.get(Category, data.category_id)
+        if not category:
+            return jsonify(ErrorResponse(error=f"Category not found with id={data.category_id}").model_dump()), 400
+
+        question = Question(**data.model_dump())
+        db.session.add(question)
+        db.session.commit()
+
+        return jsonify(QuestionResponse.model_validate(question).model_dump()), 201
 
 
 
@@ -53,9 +57,11 @@ def question(id):
     if request.method == "GET":
 
         stats = StatisticsRead.model_validate(question.statistics) if question.statistics else None
+        category = CategoryRead.model_validate(question.category) if question.category else None
         result = QuestionDetailResponse(
             id=question.id,
             text=question.text,
+            category=category,
             statistics=stats
         )
         return jsonify(result.model_dump(exclude_none=True)), 200
@@ -70,12 +76,19 @@ def question(id):
 
         try:
             data = QuestionUpdate.model_validate(raw)
-            question.text = data.text
-            db.session.commit()
-
-            return jsonify(QuestionResponse.model_validate(question).model_dump()), 200
         except ValidationError as e:
             return jsonify(ErrorResponse(error="Data is not valid").model_dump()), 400
+
+        if data.category_id is not None:
+            category = db.session.get(Category, data.category_id)
+            if not category:
+                return jsonify(ErrorResponse(error=f"Category not found with id={data.category_id}").model_dump()), 400
+            question.category_id = data.category_id
+
+        question.text = data.text
+        db.session.commit()
+
+        return jsonify(QuestionResponse.model_validate(question).model_dump()), 200
 
     if request.method == "DELETE":
         # try

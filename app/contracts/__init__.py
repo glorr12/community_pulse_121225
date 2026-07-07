@@ -4,6 +4,10 @@ from .questions import (QuestionDetailResponse,
                         QuestionCreateRequest,
                         QuestionUpdateRequest,
                         QuestionResponse)
+from .categories import (CategoryResponse,
+                        CategoryListResponse,
+                        CategoryCreateRequest,
+                        CategoryUpdateRequest)
 
 
 __all__ = [
@@ -12,5 +16,10 @@ __all__ = [
     'QuestionDetailResponse',
     'QuestionListResponse',
     'QuestionCreateRequest',
-    'QuestionResponse'
+    'QuestionUpdateRequest',
+    'QuestionResponse',
+    'CategoryResponse',
+    'CategoryListResponse',
+    'CategoryCreateRequest',
+    'CategoryUpdateRequest',
 ]
